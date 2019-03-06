@@ -1,6 +1,7 @@
 # Terraforming Infrastructure for setting up Kubernetes with kubespray
 
-vaguely based upon: https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform
+vaguely based upon: https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform</br>
+vaguely based upon: https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws
 
 ---
 
@@ -176,8 +177,20 @@ and re-run `./00_setup/terraform_init.sh`
 
 ## Terraforming GCP for kubespray
 
+vaguely based upon: https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws
+
+terraform apply will create:
+
+- VPC with Public and Private Subnets in # Availability Zones
+- Bastion Hosts and NAT Gateways in the Public Subnet
+- A dynamic number of masters, etcd, and worker nodes in the Private Subnet
+- even distributed over the # of Availability Zones
+- AWS ELB in the Public Subnet for accessing the Kubernetes API from the internet
+
+## 
 ***TODO***
 
 
+---
 
 <style type="text/css"> /* automatic heading numbering */ h1 { counter-reset: h2counter; font-size: 24pt; } h2 { counter-reset: h3counter; font-size: 22pt; margin-top: 2em; } h3 { counter-reset: h4counter; font-size: 16pt; } h4 { counter-reset: h5counter; font-size: 14pt; } h5 { counter-reset: h6counter; } h6 { } h2:before { counter-increment: h2counter; content: counter(h2counter) ".\0000a0\0000a0"; } h3:before { counter-increment: h3counter; content: counter(h2counter) "." counter(h3counter) ".\0000a0\0000a0"; } h4:before { counter-increment: h4counter; content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) ".\0000a0\0000a0"; } h5:before { counter-increment: h5counter; content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) "." counter(h5counter) ".\0000a0\0000a0"; } h6:before { counter-increment: h6counter; content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) "." counter(h5counter) "." counter(h6counter) ".\0000a0\0000a0"; } </style>
