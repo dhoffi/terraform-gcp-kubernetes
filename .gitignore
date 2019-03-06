@@ -1,7 +1,6 @@
 .DS_Store
-.terraform
 .vscode/
 
-/.envrc
-/myk8spray_tu-k8s.json
+.terraform
+/secrets/
 /tmp/

@@ -1,20 +1,21 @@
 #!/bin/bash
 
-if [ -z "$REPO_ROOT_DIR" ]; then echo 'you have to `source .envrc` in project root dir or consider installing https://direnv.net' ; fi
+if [ -z "$REPO_ROOT_DIR" ]; then echo 'you have to `source .envrc` in project root dir or consider installing https://direnv.net' ; exit -1 ; fi
 trap "set +x" INT TERM QUIT EXIT
 
 set -x
 
-if [ ! -z "$1" ] && [ "$1" == CREATE ]; then
+if [ -z "$2" ]; then
     # create service-account
     gcloud iam service-accounts create ${TF_VAR_ADMIN_NAME} \
     --display-name "admin service-account for ${TF_VAR_PROJECT_ID}"
 
-    # create keys for service-account and store in ${GCP_PROJECT_SERVICE_ACCOUNT_FILE} (!!! beware to .gitignore this!!!)
-    gcloud iam service-accounts keys create ${GCP_PROJECT_SERVICE_ACCOUNT_FILE} \
+    # create keys for service-account and store into ./secrets/... (!!! beware to .gitignore this!!!)
+    gcpProjectServiceAccountFilename="${REPO_ROOT_DIR}/secrets/${TF_VAR_PROJECT_ID}_${TF_VAR_ADMIN_NAME}.json"
+    gcloud iam service-accounts keys create "$gcpProjectServiceAccountFilename" \
     --iam-account ${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com
 
-    export GOOGLE_APPLICATION_CREDENTIALS=${GCP_PROJECT_SERVICE_ACCOUNT_FILE}
+    export GOOGLE_APPLICATION_CREDENTIALS=${gcpProjectServiceAccountFilename}
 fi
 
 # Grant the service account permission to view the Admin Project and manage Cloud Storage
