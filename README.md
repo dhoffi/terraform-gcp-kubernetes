@@ -21,6 +21,14 @@ Naming scheme of **any resource** created should be prefixed with '${DEST}-{env}
 
 ---
 
+## Terraform naming conventions
+
+- `resource`s named with kebab case
+- `resource` names are prefixed with `${dest}-${env}-<resource>_<resourceName>` with resourceName same (kebab case) as name of resource
+- `data` section names (kebab cased) are postfixed with `_data`
+- `variable`s are named with snake-case
+- `output` section names are snake-case and postfixed with `-out` except for self-links which are postfixed with `-out-self-link`
+
 ## GCP Prerequisites
 
 `direnv allow` (or `source .envrc`) asks for the value of `DEST` as the scripts cannot guess which env's are on which account.
@@ -178,7 +186,7 @@ On first run (and only on first run) you also have to create the terraform state
 The helper script `./00_setup/create_terraform_state_bucket.sh` does so for you:
 
 ``` bash
-gsutil mb -p "${TF_VAR_PROJECT_ID}" -l "${TF_VAR_GCP_LOCATION}" "gs://${TF_VAR_TF_STATE_BUCKET}"
+gsutil mb -p "${TF_VAR_PROJECT_ID}" -l "${TF_VAR_GCP_REGION}" "gs://${TF_VAR_TF_STATE_BUCKET}"
 ```
 
 This bucket will be used by terraform to store its state (per environment in this account as we will be using terraform workspaces later on).
@@ -199,7 +207,7 @@ trap "set +x" INT TERM QUIT EXIT
 
 set -x
 terraform init -backend=true -input=false \
-  -backend-config "credentials=${GCP_PROJECT_SERVICE_ACCOUNT_FILE}" \
+  -backend-config "credentials=${TF_VAR_GCP_PROJECT_SERVICE_ACCOUNT_FILE}" \
   -backend-config "bucket=${TF_VAR_TF_STATE_BUCKET}" \
   -backend-config "project=${TF_VAR_PROJECT_ID}"
 ```

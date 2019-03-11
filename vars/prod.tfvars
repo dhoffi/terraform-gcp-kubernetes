@@ -1,6 +1,6 @@
 #Global Vars
-account = "prod"
-env     = "prod"
+dest = "prod"
+env  = "prod"
 
 #VPC Vars
 

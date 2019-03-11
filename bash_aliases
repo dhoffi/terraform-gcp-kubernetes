@@ -1,20 +1,28 @@
 #!/bin/bash
-echo 'sourcing bash_aliases'
+
+if [[ $- == *i* ]] ; then
+    echo "sourcing ./bash_aliases"
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 alias twl='terraform workspace list'
-alias tw="terraform workspace list | sed -n -E 's/^\* (.*)$/\1/p'"
+#alias tw="terraform workspace list | sed -n -E 's/^\* (.*)$/\1/p'"
+function tw() { cat $DIR/.terraform/environment ; if [[ $- == *i* ]]; then echo ; fi ; }
 alias tws="terraform workspace select"
 alias twdev="terraform workspace select dev"
 alias twprod="terraform workspace select prod"
 
 echo "  -> use 'twplan ' instead of 'terraform plan'"
-function twplan() { ws=$(tw) ; set -x ; terraform plan -var-file ./vars/${ws}.tfvars ; set +x ; }
+function twplan() { ws=$(tw) ; set -x ; time terraform plan -var-file ./vars/${ws}.tfvars ; set +x ; }
 echo "  -> use 'twapply' instead of 'terraform apply'"
-function twapply() { ws=$(tw) ; set -x ; terraform apply -var-file ./vars/${ws}.tfvars ; set +x ; }
+function twapply() { ws=$(tw) ; set -x ; time terraform apply -var-file ./vars/${ws}.tfvars ; set +x ; }
+echo "  -> use 'twdestroy' instead of 'terraform destroy'"
+function twdestroy() { ws=$(tw) ; set -x ; time terraform destroy -var-file ./vars/${ws}.tfvars ; set +x ; }
 
 echo ""
 echo -n 'current workspace is: '
-terraworkspace=$(terraform workspace list 2> /dev/null | sed -n -E 's/^\* (.*)$/\1/p')
+if [ -f ".terraform/environment" ]; then terraworkspace=$(cat $DIR/.terraform/environment); else terraworkspace="unknown"; fi
 if [ $? -eq 0 ]; then
   case $terraworkspace in
   test)

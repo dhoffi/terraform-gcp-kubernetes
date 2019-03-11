@@ -1,6 +1,6 @@
 #Global Vars
-account = "devtest"
-env     = "test"
+dest = "devtest"
+env  = "test"
 
 #VPC Vars
 

@@ -25,7 +25,31 @@ gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
 
 gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
   --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/iam.serviceAccountUser
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
   --role roles/storage.admin
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/compute.admin
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/compute.instanceAdmin.v1
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/compute.networkAdmin
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/compute.loadBalancerAdmin
+
+gcloud projects add-iam-policy-binding ${TF_VAR_PROJECT_ID} \
+  --member serviceAccount:${TF_VAR_ADMIN_NAME}@${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/dns.admin
 
 # Any actions that Terraform performs require that the API be enabled to do so.
 
