@@ -39,3 +39,56 @@ if [ $? -eq 0 ]; then
 else
   echo -e "\e[1;31munknown\e[0m"
 fi
+
+
+### coding helpers
+
+# # does not work for structures with nested braces
+# /{/                    if current line contains{then execute next block
+# {                      start block
+#     :1;                label for code to jump to
+#     /}/!               if the line does not contain}then execute next block
+#     {                  start block
+#         N;             add next line to pattern space
+#         b1             jump to label 1
+#     };                 end block
+#     /event/p           if the pattern space contains the search string, print it
+#                        (at this point the pattern space contains a full block of lines from{to})
+# };                     end block
+# d                      delete pattern space
+#
+# for recursive usage u may use this:
+# for d in $(find . -type d \( -name '.git' -o -name '.terraform' \) -prune -o -type f -name '*.tf' -print); do extractBraced output $d; done
+# or with shopt -s globstar
+# for f in ./**/*.tf; do extractBraced output $f ; done
+function extractBraced() {
+  if [ -z "$1" ] || [ -z "$2" ]; then echo "synopsis: extractBraced <prefix> <fileGlobs>"; echo "      eg: extractBraced output *.tf" ; return ; fi
+  prefix=$1
+  shift
+  for f in ${*}
+  do
+      echo "# from $f"
+      # only works with gnu sed, so on mac osx do 'brew install gnu-sed' and use gsed instead of sed
+      gsed "/$prefix.* {/{:1; /[^{]} *$/!{N; b1}; /$prefix.* /p}; d" $f
+  done
+}
+
+
+# getting some info from compute instances (vms)
+function gcinstances() {
+  node=worker
+  if [ ! -z "$1" ] && [ "$1" != "local" ]; then node=$1 ; fi
+  local=false
+  if [ ! -z "$1" ] && [ "$1" = "local" ] || [ ! -z "$2" ]; then local=true ; fi
+
+  outfile=$REPO_ROOT_DIR/tmp/$DEST-$(cat $REPO_ROOT_DIR/.terraform/environment)-instances.json
+
+  if [ "$local" = "false" ]; then
+    gcloud compute instances list --format=json > $outfile
+  fi
+
+  jq -r \
+  --arg NODETYPE $node --arg DEST $DEST --arg WORKSPACE $(cat $REPO_ROOT_DIR/.terraform/environment) \
+  '.[] | select((.labels.node == $NODETYPE) and (.labels.dest == $DEST) and (.labels.env == $WORKSPACE)) | [.networkInterfaces[].networkIP,.name,"tags[",.tags.items[],"]"] | join(" ")' $outfile
+  set +x
+}

@@ -1,6 +1,15 @@
 variable "dest" {}
 variable "env" {}
 
+variable "JUMPBOXUSER" {}
+variable "JUMPBOXSSHFILENAME" {}
+variable "JUMPBOXSSHFILE" {}
+variable "JUMPBOXSSHPUB" {}
+variable "NODEUSER" {}
+variable "NODESSHFILENAME" {}
+variable "NODESSHFILE" {}
+variable "NODESSHPUB" {}
+
 # from $REPO_ROOT_DIR/.envrc
 # redundant definition to fail-fast
 variable "ADMIN_NAME" {}

@@ -32,17 +32,27 @@ resource "google_compute_instance_template" "jumpboxes-template" {
   network_interface {
     subnetwork = "${google_compute_subnetwork.mgmt-subnet.self_link}"
 
-    # if ommited --> no public ip
-    # access_config = {
-    #   # if empty, gets a public ephemeral ip
-    # }
+    # if omited --> no public ip
+    access_config = {
+      # if empty, gets a public ephemeral ip
+    }
   }
 
   lifecycle {
     create_before_destroy = true
   }
 
-  metadata = "${local.default_labels}"
+  #   metadata {
+  #     # sshKeys = "gcpadmin:${file("~/.ssh/gcp_jumpbox.pub")}"
+  #     # sshKeys = "devtest-gcpadmin:${file("/Users/hoffmd9/.ssh/gcp-devtest-jumpbox.pub")}"
+  #     # sshKeys = "${var.jumpboxuser}:${file("${var.jumpboxsshfile}.pub")}"
+  #     sshKeys = <<EOT
+  #       "${var.jumpboxuser}:${var.jumpboxsshpub}"
+  # EOT
+  #   }
+  metadata = "${merge(local.default_labels, map("sshKeys", "${var.jumpboxuser}:${var.jumpboxsshpub}"))}"
+  # metadata = "${local.default_labels}"
+
   labels   = "${local.default_labels}"
   tags     = "${local.default_tags}"
 }
@@ -58,6 +68,8 @@ resource "google_compute_region_instance_group_manager" "jumpboxes-group-manager
 
   # unless this resource is attached to an autoscaler, in which case it should never be set
   target_size = "${var.how_many_jumpboxes}"
+
+  # only for EXTERNAL lbs
   target_pools = ["${google_compute_target_pool.jumpboxes-target-pool.self_link}"]
 
   #distribution_policy_zones  = ["europe-west1-b", "europe-west1-c"]
@@ -68,6 +80,7 @@ resource "google_compute_region_instance_group_manager" "jumpboxes-group-manager
   # }
 }
 
+# only for EXTERNAL lbs
 resource "google_compute_target_pool" "jumpboxes-target-pool" {
   name             = "${local.pre}-jumpboxes-target-pool"
   session_affinity = "CLIENT_IP"
@@ -82,13 +95,13 @@ data "google_compute_region_instance_group" "jumpboxes-group_data" {
   self_link = "${google_compute_region_instance_group_manager.jumpboxes-group-manager.instance_group}"
 }
 
-
-
 # resource "google_compute_instance" "jumpbox" {
 #   name         = "jumpbox"
 #   machine_type = "f1-micro"
 
+
 #   tags = ["jumpbox"]
+
 
 #   boot_disk {
 #     # source      = "${google_compute_disk.jumpbox_disk.name}"
@@ -98,13 +111,16 @@ data "google_compute_region_instance_group" "jumpboxes-group_data" {
 #     auto_delete = true
 #   }
 
+
 #   network_interface {
 #     network = "default"
+
 
 #     access_config {
 #       # ephemeral external ip address
 #     }
 #   }
+
 
 #   scheduling {
 #     preemptible         = false
@@ -112,14 +128,17 @@ data "google_compute_region_instance_group" "jumpboxes-group_data" {
 #     automatic_restart   = true
 #   }
 
+
 #   metadata {
 #     sshKeys = "gcpadmin:${file("~/.ssh/gcp_jumpbox.pub")}"
 #   }
+
 
 #   provisioner "remote-exec" {
 #     inline = [
 #       "echo \"hello from $$HOST\" > ~/terraform_complete",
 #     ]
+
 
 #     connection {
 #       type        = "ssh"
@@ -131,6 +150,8 @@ data "google_compute_region_instance_group" "jumpboxes-group_data" {
 #   }
 # }
 
+
 # output "jumpbox_ip-out" {
 #   value = "${google_compute_instance.jumpbox.network_interface.0.access_config.0.nat_ip}"
 # }
+

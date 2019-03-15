@@ -2,6 +2,8 @@ resource "google_compute_firewall" "jumpboxes-firewall" {
   name = "${local.pre}-jumpboxes-firewall"
   network = "${var.network_self_link}"
 
+  # enable_logging = true
+
   allow {
     protocol = "tcp"
 
@@ -12,6 +14,9 @@ resource "google_compute_firewall" "jumpboxes-firewall" {
       "8080", # http-proxy
     ]
   }
+  # allow {
+  #   protocol = "icmp"
+  # }
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["jumpbox"]

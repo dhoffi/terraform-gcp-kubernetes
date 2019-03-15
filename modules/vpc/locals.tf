@@ -19,7 +19,7 @@ locals {
   worker_labels = {
     dest = "${var.dest}"
     env  = "${var.env}"
-    node = "master"
+    node = "worker"
 
     kubernetes-cluster = "${var.cluster_name}"
   }

@@ -43,9 +43,11 @@ resource "google_compute_instance_template" "masters-template" {
     create_before_destroy = true
   }
 
-  metadata = "${local.master_labels}"
-  labels   = "${local.master_labels}"
-  tags     = "${local.master_tags}"
+  metadata = "${merge(local.master_labels, map("sshKeys", "${var.nodeuser}:${var.nodesshpub}"))}"
+  # metadata = "${local.master_labels}"
+
+  labels = "${local.master_labels}"
+  tags   = "${local.master_tags}"
 }
 
 resource "google_compute_instance_template" "workers-template" {
@@ -82,7 +84,9 @@ resource "google_compute_instance_template" "workers-template" {
     create_before_destroy = true
   }
 
-  metadata = "${local.worker_labels}"
+  metadata = "${merge(local.worker_labels, map("sshKeys", "${var.nodeuser}:${var.nodesshpub}"))}"
+  # metadata = "${local.worker_labels}"
+
   labels   = "${local.worker_labels}"
   tags     = "${local.worker_tags}"
 }
@@ -141,6 +145,7 @@ resource "google_compute_region_instance_group_manager" "workers-group-manager" 
 resource "google_compute_region_backend_service" "masters-backend-service" {
   name             = "${local.pre}-masters-backend-service"
   session_affinity = "NONE"
+
   # protocol = "HTTP"
 
   # only for INTERNAL lb, otherwise google_compute_target_pool references ...
@@ -148,7 +153,6 @@ resource "google_compute_region_backend_service" "masters-backend-service" {
     description = "backend vms for masters-backend-service"
     group       = "${google_compute_region_instance_group_manager.masters-group-manager.instance_group}"
   }
-
   health_checks = [
     # "${google_compute_http_health_check.masters-health-check.self_link}",
     "${google_compute_health_check.masters-health-check.self_link}",
@@ -161,6 +165,7 @@ resource "google_compute_region_backend_service" "masters-backend-service" {
 resource "google_compute_region_backend_service" "workers-backend-service" {
   name             = "${local.pre}-workers-backend-service"
   session_affinity = "NONE"
+
   # protocol = "HTTP"
 
   # only for INTERNAL lb, otherwise google_compute_target_pool references ...
@@ -168,7 +173,6 @@ resource "google_compute_region_backend_service" "workers-backend-service" {
     description = "backend vms for workers-backend-service"
     group       = "${google_compute_region_instance_group_manager.workers-group-manager.instance_group}"
   }
-
   health_checks = [
     # "${google_compute_http_health_check.workers-health-check.self_link}",
     "${google_compute_health_check.workers-health-check.self_link}",

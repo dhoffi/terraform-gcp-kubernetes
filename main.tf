@@ -15,9 +15,15 @@ module "vpc" {
   source = "./modules/vpc"
 
   # parameters
-  dest                  = "${var.dest}"
-  env                   = "${var.env}"
-  gcp_region            = "${var.GCP_REGION}"
+  dest       = "${var.dest}"
+  env        = "${var.env}"
+  gcp_region = "${var.GCP_REGION}"
+
+  nodeuser        = "${var.NODEUSER}"
+  nodesshfilename = "${var.NODESSHFILENAME}"
+  nodesshfile     = "${var.NODESSHFILE}"
+  nodesshpub      = "${var.NODESSHPUB}"
+
   cluster_name          = "${var.cluster_name}"
   how_many_master_nodes = "${var.how_many_master_nodes}"
   how_many_worker_nodes = "${var.how_many_worker_nodes}"
@@ -33,6 +39,16 @@ module "mgmt" {
   dest       = "${var.dest}"
   env        = "${var.env}"
   gcp_region = "${var.GCP_REGION}"
+
+  jumpboxuser        = "${var.JUMPBOXUSER}"
+  jumpboxsshfilename = "${var.JUMPBOXSSHFILENAME}"
+  jumpboxsshfile     = "${var.JUMPBOXSSHFILE}"
+  jumpboxsshpub      = "${var.JUMPBOXSSHPUB}"
+
+  nodeuser        = "${var.NODEUSER}"
+  nodesshfilename = "${var.NODESSHFILENAME}"
+  nodesshfile     = "${var.NODESSHFILE}"
+  nodesshpub      = "${var.NODESSHPUB}"
 
   network_self_link   = "${module.vpc.network-out-self-link}"
   cluster_name        = "${var.cluster_name}"

@@ -1,5 +1,9 @@
 variable dest {}
 variable env {}
+variable "nodeuser" {}
+variable "nodesshfilename" {}
+variable "nodesshfile" {}
+variable "nodesshpub" {}
 variable gcp_region {}
 variable cluster_name {}
 variable how_many_master_nodes {}

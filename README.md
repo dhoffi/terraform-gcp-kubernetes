@@ -21,6 +21,25 @@ Naming scheme of **any resource** created should be prefixed with '${DEST}-{env}
 
 ---
 
+<big><u>Table of Content:</u></big>
+
+- [Terraforming Infrastructure for setting up Kubernetes with kubespray](#terraforming-infrastructure-for-setting-up-kubernetes-with-kubespray)
+  - [Terraform naming conventions](#terraform-naming-conventions)
+  - [GCP Prerequisites](#gcp-prerequisites)
+    - [gcloud configuration](#gcloud-configuration)
+    - [local environment .envrc (usable with https://direnv.net)](#local-environment-envrc-usable-with-httpsdirenvnet)
+    - [enable billing for your project](#enable-billing-for-your-project)
+    - [create a/the GCP service-account and authorization for it](#create-athe-gcp-service-account-and-authorization-for-it)
+    - [create terraform backend storage bucket](#create-terraform-backend-storage-bucket)
+    - [terraform init with parameterized backend-config](#terraform-init-with-parameterized-backend-config)
+    - [terraform workspace](#terraform-workspace)
+    - [jumphost / jumpbox / bastion host](#jumphost--jumpbox--bastion-host)
+    - [first time setup of `~/.ssh/known_hosts` and `~/.ssh/config`](#first-time-setup-of-sshknownhosts-and-sshconfig)
+  - [Terraforming GCP for kubespray](#terraforming-gcp-for-kubespray)
+    - [terraform apply](#terraform-apply)
+
+---
+
 ## Terraform naming conventions
 
 - `resource`s named with kebab case
@@ -261,8 +280,80 @@ Beware that the workspace name will be taken as the 'env' name for all created a
 
 It also has to match e.g. the variable file base names under `./vars/<env>.tfvars`
 
+### jumphost / jumpbox / bastion host
+
+As you should should keep things exposed to the internet at a minimum but still have (admin) access to troubleshoot or run automation tasks, you should setup jumpboxs from which to act on your environment.
+
+jumpbox user should follow the naming convention used throughout this project for `${DEST}` and `environment` </br>
+where `environment` always is the name of the terraform workspace `cat ${REPO_ROOT_DIR}/.terraform/environment`
+
+ssh private and pub key should be on local env in
+- `~/.ssh/gcp-${DEST}-jumpbox` # pointed to by `.envrc` environment variable `JUMPBOXSSHFILENAME`
+- `~/.ssh/gcp-${DEST}-jumpbox.pub
+
+There is a helper script generating a new one (if it not already exists) in `./00_setup/jumpbox_rsagen.sh`</br>
+user inside the generated key is `${DEST}-gcpadmin` # pointed to by `.envrc` environment variable `JUMPBOXUSER`
+
+### first time setup of `~/.ssh/known_hosts` and `~/.ssh/config`
+
+The first time you login to any machine, ssh will verify/check the host fingerprint and ask you if is alright.
+
+You have to do this once by logging into the jumpbox.
+
+```
+ssh -i $TF_VAR_JUMPBOXSSHFILE $TF_VAR_JUMPBOXUSER@<jumpboxIp>
+```
+
+But this would be very inconvenient to do if you have a cluster of a few hundreds of nodes.
+
+`./00_setup/jumpbox_generate_known_hosts.sh` helperscript will help you and generate ONE executable cmd (and redundantly also plain text) which you can execute to add the needed lines for all workers and masters into either
+- your local computers `~/.ssh/known_hosts`
+- the jumpboxs `~/.ssh/known_hosts`
+
+For convenience you can setup your local computers `~/.ssh/config` file like this:
+
+```
+# private network with master and worker nodes
+Host 10.0.1.*
+  # ProxyCommand ssh -W %h:%p 35.233.34.228
+  ProxyJump devtest-jumpbox
+  User devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+
+Host devtest-jumpbox
+  Hostname 35.233.34.228
+  User devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+```
+
+In above example the jumpbox and the nodes share the same user and private ssh key (but you are welcome to give nodes and jumpbox different ssh keys, or even give masters and workers different ssh keys).
+
+This way you not only can login to the jumpbox by just typing `ssh devtest-jumpbox`</br>
+but also directly tunnel through to the private node vms e.g. `ssh 10.0.1.5`
+
+<center><big>!!! This way there is no need to have private ssh keys on the jumphost !!!</big></center>
+<center><big>!!! Neither you have to use ssh-agent forwarding !!!</big></center>
+</br>
+
+You also can specify all this on your commandline without having a static `~/.ssh/config` by:
+
+```
+ssh -i ~/.ssh/privateSshFile -J juser@jumphost nuser@node
+```
+
+As e.g. ansible just uses plain ssh connections this should enable you to run your ansible playbook on private network vms directly from your local laptop via the jumpbox. (either by having it in your `~/.ssh/config` or telling ansible to use your file of choice, e.g.:)
+
+./ansible.cfg
+```
+[ssh_connection]
+ssh_args = -F ./ssh.cfg -o ControlMaster=auto -o ControlPersist=5m
+control_path = ~/.ssh/ansible-%%r@%%h:%%p
+```
+
 ---
+
 ---
+
 ---
 
 ## Terraforming GCP for kubespray
@@ -271,14 +362,32 @@ vaguely based upon: https://github.com/kubernetes-sigs/kubespray/tree/master/con
 
 terraform apply will create:
 
-- VPC with Public and Private Subnets in # Availability Zones
-- Bastion Hosts and NAT Gateways in the Public Subnet
+- VPC with one public, one private and one mgmt subnets in # Availability Zones
+- Bastion Hosts (TODO not yet) and NAT Gateways in the Public Subnet
 - A dynamic number of masters, etcd, and worker nodes in the Private Subnet
-- even distributed over the # of Availability Zones
-- AWS ELB in the Public Subnet for accessing the Kubernetes API from the internet
+- each group of nodes is managed either 
+  - by a GCP external load balancer with target pool (if exposed to the internet like the jumphosts)
+  - or by a GCP internal load balancer with service-backend pool
+- This way GCP assures that a node is fired up again if it gets unhealthy
+- GCP managed vm pools are regional and therefore evenly distributed over the # of Availability Zones
 
-## 
-***TODO***
+### terraform apply
+
+for convenience and usage of gcloud configurations and terraform workspaces as described above, before you do anything in your terminal you have to:
+
+- either `source ./.envrc` and `source ./bash_aliases`
+- or `direnv allow` and `source ./bash_aliases`  (unfortunately I don't know how to source stuff from direnv directly)
+
+```
+terraform workspace list
+terraform workspace select dev
+
+twplan
+twapply
+twdestroy
+```
+
+***more still to be written...***
 
 
 ---

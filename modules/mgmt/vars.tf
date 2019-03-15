@@ -1,5 +1,13 @@
 variable dest {}
 variable env {}
+variable jumpboxuser {}
+variable jumpboxsshfilename {}
+variable jumpboxsshfile {}
+variable "jumpboxsshpub" {}
+variable "nodeuser" {}
+variable "nodesshfilename" {}
+variable "nodesshfile" {}
+variable "nodesshpub" {}
 variable gcp_region {}
 variable how_many_jumpboxes {}
 variable network_self_link {}
