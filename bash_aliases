@@ -127,3 +127,4 @@ function gcinstances() {
 
   jq -r "$theJqQuery" $outfile | sort
 }
+export -f gcinstances
