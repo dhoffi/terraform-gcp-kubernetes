@@ -76,19 +76,54 @@ function extractBraced() {
 
 # getting some info from compute instances (vms)
 function gcinstances() {
-  node=worker
-  if [ ! -z "$1" ] && [ "$1" != "local" ]; then node=$1 ; fi
   local=false
-  if [ ! -z "$1" ] && [ "$1" = "local" ] || [ ! -z "$2" ]; then local=true ; fi
+  myQuery='(.labels.node == "worker")'
+  AND=' and '
+  theColumns='.networkInterfaces[].networkIP,.name,"tags[",.tags.items[],"]"'
+  for par in "$@"; do
+    case $par in
+    all)
+      myQuery=''
+      AND=''
+      ;;
+    node)
+      myQuery='((.labels.node == "master") or (.labels.node == "worker"))'
+      ;;
+    worker)
+      myQuery='(.labels.node == "worker")'
+      ;;
+    master)
+      myQuery='(.labels.node == "master")'
+      ;;
+    jumpbox)
+      myQuery='(.labels.jumpbox == "true")'
+      ;;
+    ip)
+      theColumns='.networkInterfaces[].networkIP'
+      ;;
+    ipname)
+      theColumns='.networkInterfaces[].networkIP,.name'
+      ;;
+    local)
+      local=true
+      ;;
+    info)
+      ;;
+    *)
+      echo "unknown parameter: $par"
+    esac
+  done
 
+  selectEnvPostfix=$(printf '%s((.labels.dest == "%s") and (.labels.env == "%s"))' "$AND" $DEST $(cat $REPO_ROOT_DIR/.terraform/environment))
+  theSelect=$(printf '%s%s' "$myQuery" "$selectEnvPostfix" )
+
+  theJqQuery=$(printf '.[] | select(%s) | [%s] | join(" ")' "$theSelect" "$theColumns")
+
+  mkdir -p $REPO_ROOT_DIR/tmp
   outfile=$REPO_ROOT_DIR/tmp/$DEST-$(cat $REPO_ROOT_DIR/.terraform/environment)-instances.json
-
   if [ "$local" = "false" ]; then
     gcloud compute instances list --format=json > $outfile
   fi
 
-  jq -r \
-  --arg NODETYPE $node --arg DEST $DEST --arg WORKSPACE $(cat $REPO_ROOT_DIR/.terraform/environment) \
-  '.[] | select((.labels.node == $NODETYPE) and (.labels.dest == $DEST) and (.labels.env == $WORKSPACE)) | [.networkInterfaces[].networkIP,.name,"tags[",.tags.items[],"]"] | join(" ")' $outfile
-  set +x
+  jq -r "$theJqQuery" $outfile | sort
 }

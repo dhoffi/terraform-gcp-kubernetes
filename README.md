@@ -289,7 +289,7 @@ where `environment` always is the name of the terraform workspace `cat ${REPO_RO
 
 ssh private and pub key should be on local env in
 - `~/.ssh/gcp-${DEST}-jumpbox` # pointed to by `.envrc` environment variable `JUMPBOXSSHFILENAME`
-- `~/.ssh/gcp-${DEST}-jumpbox.pub
+- `~/.ssh/gcp-${DEST}-jumpbox.pub`
 
 There is a helper script generating a new one (if it not already exists) in `./00_setup/jumpbox_rsagen.sh`</br>
 user inside the generated key is `${DEST}-gcpadmin` # pointed to by `.envrc` environment variable `JUMPBOXUSER`
