@@ -26,7 +26,7 @@ for ip in $workerIps; do
 done
 
 echo ''
-echo 'copy&pastable cmd for - either local (excluding ssh EOT lines) - or on jumphost (with ssh EOT lines):'
+echo 'copy&pastable cmd for - either local (excluding ssh EOT lines) - or on jumpbox (with ssh EOT lines):'
 echo ''
 echo "ssh -i $TF_VAR_JUMPBOXSSHFILE $TF_VAR_JUMPBOXUSER@$jumpbox /bin/bash << EOT"
 for khline in "${result[@]}"; do
@@ -39,5 +39,5 @@ echo 'EOT'
 
 echo ''
 echo ''
-echo 'plain text for copy and paste into local and/or jumphosts ~/.ssh/known_hosts:'
+echo 'plain text for copy and paste into local and/or jumpboxs ~/.ssh/known_hosts:'
 printf '%s\n' "${result[@]}"

@@ -1,0 +1,8 @@
+---
+- name: hello world
+  hosts: all
+ 
+  tasks:
+ 
+  - name: hello world task
+    shell: echo "Hi! ansible hello world is working!" >> ~/helloworld.txt
