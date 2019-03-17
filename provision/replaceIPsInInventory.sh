@@ -16,7 +16,7 @@ if [ $? -ne 0 ]; then echo 'you have to source bash_aliases (to have gcinstances
 lead='### BEGIN GENERATED CONTENT'
 tail='### END GENERATED CONTENT'
 
-instancetypes=("nix" "master" "worker")
+instancetypes=("master" "worker")
 cp $inventoryfile $inventoryfile.new
 for what in "${instancetypes[@]}"; do
     # check
