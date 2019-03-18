@@ -19,12 +19,18 @@ module "vpc" {
   env        = "${var.env}"
   gcp_region = "${var.GCP_REGION}"
 
+  jumpboxuser        = "${var.JUMPBOXUSER}"
+  jumpboxsshfilename = "${var.JUMPBOXSSHFILENAME}"
+  jumpboxsshfile     = "${var.JUMPBOXSSHFILE}"
+  jumpboxsshpub      = "${var.JUMPBOXSSHPUB}"
+
   nodeuser        = "${var.NODEUSER}"
   nodesshfilename = "${var.NODESSHFILENAME}"
   nodesshfile     = "${var.NODESSHFILE}"
   nodesshpub      = "${var.NODESSHPUB}"
 
   cluster_name          = "${var.cluster_name}"
+  how_many_jumpboxs    = "${var.how_many_jumpboxs}"
   how_many_master_nodes = "${var.how_many_master_nodes}"
   how_many_worker_nodes = "${var.how_many_worker_nodes}"
   mgmt_subnet_cidr      = "${var.mgmt_subnet_cidr}"
@@ -52,7 +58,6 @@ module "mgmt" {
 
   network_self_link   = "${module.vpc.network-out-self-link}"
   cluster_name        = "${var.cluster_name}"
-  how_many_jumpboxes  = "${var.how_many_jumpboxes}"
   mgmt_subnet_cidr    = "${var.mgmt_subnet_cidr}"
   private_subnet_cidr = "${var.private_subnet_cidr}"
   public_subnet_cidr  = "${var.public_subnet_cidr}"

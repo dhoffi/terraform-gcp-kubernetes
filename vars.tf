@@ -21,7 +21,7 @@ variable "GCP_ZONE" {}
 variable "TF_STATE_BUCKET" {}
 
 # VPC variables
-variable how_many_jumpboxes {}
+variable how_many_jumpboxs {}
 
 variable cluster_name {}
 

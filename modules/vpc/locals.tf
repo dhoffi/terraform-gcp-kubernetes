@@ -9,21 +9,5 @@ locals {
 
     kubernetes-cluster = "${var.cluster_name}"
   }
-  master_labels = {
-    dest = "${var.dest}"
-    env  = "${var.env}"
-    node = "master"
-
-    kubernetes-cluster = "${var.cluster_name}"
-  }
-  worker_labels = {
-    dest = "${var.dest}"
-    env  = "${var.env}"
-    node = "worker"
-
-    kubernetes-cluster = "${var.cluster_name}"
-  }
   default_tags = ["${var.dest}", "${var.env}", "${var.cluster_name}"]
-  master_tags = ["${var.dest}", "${var.env}", "node", "master", "${var.cluster_name}"]
-  worker_tags = ["${var.dest}", "${var.env}", "node", "worker", "${var.cluster_name}"]
 }

@@ -27,8 +27,8 @@
 
 # frontend of a gcp load-balancer is a forwarding rule
 resource "google_compute_forwarding_rule" "lb-internal-masters-forwarding-rule" {
-  description = "load-balancer for gcp region internal traffic"
   name        = "${local.pre}-lb-internal-masters-forwarding-rule"
+  description = "load-balancer for gcp region internal traffic"
 
   # only for INTERNAL lbs (only dedicated ports or a port_range)
   # if changing, also check matching firewall ports!
@@ -54,7 +54,9 @@ resource "google_compute_forwarding_rule" "lb-internal-masters-forwarding-rule" 
 
 # it's wise to also give internal load-balancers firewall-rules
 resource "google_compute_firewall" "lb-internal-basics-firewall" {
-  name    = "${local.pre}-lb-internal-basics-firewall"
+  name        = "${local.pre}-lb-internal-basics-firewall"
+  description = "${local.pre}-lb-internal-basics-firewall"
+
   network = "${google_compute_network.vpc.self_link}"
 
   allow {
@@ -78,7 +80,9 @@ resource "google_compute_firewall" "lb-internal-basics-firewall" {
 }
 
 resource "google_compute_firewall" "lb-internal-masters-firewall" {
-  name    = "${local.pre}-lb-internal-masters-firewall"
+  name        = "${local.pre}-lb-internal-masters-firewall"
+  description = "${local.pre}-lb-internal-masters-firewall"
+
   network = "${google_compute_network.vpc.self_link}"
 
   allow {
@@ -98,7 +102,9 @@ resource "google_compute_firewall" "lb-internal-masters-firewall" {
 }
 
 resource "google_compute_firewall" "lb-internal-workers-firewall" {
-  name    = "${local.pre}-lb-internal-workers-firewall"
+  name        = "${local.pre}-lb-internal-workers-firewall"
+  description = "${local.pre}-lb-internal-workers-firewall"
+
   network = "${google_compute_network.vpc.self_link}"
 
   allow {

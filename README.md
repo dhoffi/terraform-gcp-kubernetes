@@ -315,13 +315,13 @@ For convenience you can setup your local computers `~/.ssh/config` file like thi
 ```
 # private network with master and worker nodes
 Host 10.0.1.*
-  # ProxyCommand ssh -W %h:%p 35.233.34.228
+  # ProxyCommand ssh -W %h:%p 104.199.92.9
   ProxyJump devtest-jumpbox
   User devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
 
 Host devtest-jumpbox
-  Hostname 35.233.34.228
+  Hostname 104.199.92.9
   User devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
 ```
@@ -331,14 +331,14 @@ In above example the jumpbox and the nodes share the same user and private ssh k
 This way you not only can login to the jumpbox by just typing `ssh devtest-jumpbox`</br>
 but also directly tunnel through to the private node vms e.g. `ssh 10.0.1.5`
 
-<center><big>!!! This way there is no need to have private ssh keys on the jumphost !!!</big></center>
+<center><big>!!! This way there is no need to have private ssh keys on the jumpbox !!!</big></center>
 <center><big>!!! Neither you have to use ssh-agent forwarding !!!</big></center>
 </br>
 
 You also can specify all this on your commandline without having a static `~/.ssh/config` by:
 
 ```
-ssh -i ~/.ssh/privateSshFile -J juser@jumphost nuser@node
+ssh -i ~/.ssh/privateSshFile -J juser@jumpbox nuser@node
 ```
 
 As e.g. ansible just uses plain ssh connections this should enable you to run your ansible playbook on private network vms directly from your local laptop via the jumpbox. (either by having it in your `~/.ssh/config` or telling ansible to use your file of choice, e.g.:)
