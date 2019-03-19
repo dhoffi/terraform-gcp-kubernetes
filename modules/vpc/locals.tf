@@ -2,7 +2,7 @@ locals {
   pre = "${var.dest}-${var.env}"
 
 
-  # add tags like this: tags = "${merge(var.default_tags, map("tagname", "tagvalue"))}"
+  # add labels like this: labels = "${merge(var.default_labels, map("labelname", "labelvalue"))}"
   default_labels = {
     dest = "${var.dest}"
     env  = "${var.env}"

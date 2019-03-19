@@ -5,7 +5,7 @@ if [ -z "$REPO_ROOT_DIR" ]; then
     exit -1
 fi
 
-jumpbox="104.199.92.9"
+jumpbox="35.205.119.175"
 
 >&2 echo "retrieving master ips..."
 masterIps=$(gcloud compute instances list --format=json | jq -r --arg NODETYPE master --arg DEST $DEST --arg WORKSPACE $(cat $REPO_ROOT_DIR/.terraform/environment) '.[] | select((.labels.node == $NODETYPE) and (.labels.dest == $DEST) and (.labels.env == $WORKSPACE)) | .networkInterfaces[].networkIP')

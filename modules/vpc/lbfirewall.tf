@@ -1,30 +1,3 @@
-# # frontend of a gcp load-balancer is a forwarding rule
-# resource "google_compute_forwarding_rule" "lb-external-forwarding-rule" {
-#   description           = "load-balancer for external internet traffic"
-#   name                  = "${local.pre}-lb-external-forwarding-rule"
-#   target                = "${google_compute_target_pool.workers-target-pool.self_link}"
-#   load_balancing_scheme = "EXTERNAL"
-#   port_range            = "${var.service_port}"
-# }
-
-# # external facing load-balancer always goes with a firewall-rule
-# resource "google_compute_firewall" "lb-external-firewall" {
-#   name = "${local.pre}-lb-external-firewall"
-
-#   allow {
-#     protocol = "tcp"
-#     ports    = [
-#       "80", "8080"
-#     ]
-#   }
-#   allow {
-#     protocol = "icmp"
-#   }
-
-#   source_ranges = ["0.0.0.0/0"]
-#   target_tags   = ["${var.dest}-${var.env}-worker"]
-# }
-
 # frontend of a gcp load-balancer is a forwarding rule
 resource "google_compute_forwarding_rule" "lb-internal-masters-forwarding-rule" {
   name        = "${local.pre}-lb-internal-masters-forwarding-rule"

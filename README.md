@@ -315,13 +315,13 @@ For convenience you can setup your local computers `~/.ssh/config` file like thi
 ```
 # private network with master and worker nodes
 Host 10.0.1.*
-  # ProxyCommand ssh -W %h:%p 104.199.92.9
+  # ProxyCommand ssh -W %h:%p 35.205.119.175
   ProxyJump devtest-jumpbox
   User devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
 
 Host devtest-jumpbox
-  Hostname 104.199.92.9
+  Hostname 35.205.119.175
   User devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
 ```

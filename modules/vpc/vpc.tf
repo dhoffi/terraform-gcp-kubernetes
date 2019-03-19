@@ -6,55 +6,58 @@ resource "google_compute_network" "vpc" {
   routing_mode            = "REGIONAL"
 }
 
-# resource "google_compute_router" "vpc-router" {
-#   name        = "${local.pre}-vpc-router"
-#   description = "${local.pre}-vpc-router"
+resource "google_compute_router" "vpc-router" {
+  name        = "${local.pre}-vpc-router"
+  description = "${local.pre}-vpc-router"
 
-#   network = "${google_compute_network.vpc.self_link}"
+  network = "${google_compute_network.vpc.self_link}"
 
-#   bgp {
-#     asn            = 65023
-#     advertise_mode = "DEFAULT"
-#   }
-# }
+  bgp {
+    asn            = 65023
+    advertise_mode = "DEFAULT"
+  }
+}
 
-# resource "google_compute_router_nat" "vpc-router-nat" {
-#   name        = "${local.pre}-vpc-router-nat"
+resource "google_compute_router_nat" "vpc-router-nat" {
+  name = "${local.pre}-vpc-router-nat"
 
-#   router                             = "${google_compute_router.vpc-router.name}"
-#   nat_ip_allocate_option             = "AUTO_ONLY"
-#   source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+  router                             = "${google_compute_router.vpc-router.name}"
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
 
-#   subnetwork {
-#     name = "${google_compute_subnetwork.mgmt-subnet.self_link}"
+  subnetwork {
+    name = "${google_compute_subnetwork.mgmt-subnet.self_link}"
 
-#     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
-#   }
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
 
-#   subnetwork {
-#     name = "${google_compute_subnetwork.private-subnet.self_link}"
+  subnetwork {
+    name = "${google_compute_subnetwork.private-subnet.self_link}"
 
-#     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
-#   }
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
 
-#   subnetwork {
-#     name = "${google_compute_subnetwork.public-subnet.self_link}"
+  subnetwork {
+    name = "${google_compute_subnetwork.public-subnet.self_link}"
 
-#     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
-#   }
-# }
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
+}
 
-# resource "google_compute_route" "route_vpc_to_internet" {
-#   name        = "${local.pre}-route-vpc-to-internet"
-#   description = "${local.pre}-route-vpc-to-internet"
+resource "google_compute_route" "route_vpc_to_internet" {
+  name        = "${local.pre}-route-vpc-to-internet"
+  description = "${local.pre}-route-vpc-to-internet"
 
-#   network          = "${google_compute_network.vpc.self_link}"
-#   dest_range       = "0.0.0.0/0"
-#   next_hop_gateway = "default-internet-gateway"
+  network          = "${google_compute_network.vpc.self_link}"
+  dest_range       = "0.0.0.0/0"
+  next_hop_gateway = "default-internet-gateway"
 
-#   tags = ["${local.default_tags}", "route"]
-# }
+  tags = ["${local.default_tags}", "route"]
+}
 
+# =================================================================================
+# ========================   output   =============================================
+# =================================================================================
 output "network-out-self-link" {
   value = "${google_compute_network.vpc.self_link}"
 }
