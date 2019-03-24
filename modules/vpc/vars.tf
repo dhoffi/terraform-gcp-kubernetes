@@ -6,13 +6,15 @@ variable jumpboxsshfilename {}
 variable jumpboxsshfile {}
 variable jumpboxsshpub {}
 
+variable cluster_prefix {}
+variable cluster_name {}
+
 variable "nodeuser" {}
 variable "nodesshfilename" {}
 variable "nodesshfile" {}
 variable "nodesshpub" {}
 
 variable gcp_region {}
-variable cluster_name {}
 
 variable "how_many_jumpboxs" {}
 variable how_many_master_nodes {}

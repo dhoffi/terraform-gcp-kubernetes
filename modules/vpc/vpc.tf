@@ -13,7 +13,7 @@ resource "google_compute_router" "vpc-router" {
   network = "${google_compute_network.vpc.self_link}"
 
   bgp {
-    asn            = 65023
+    asn            = 65022
     advertise_mode = "DEFAULT"
   }
 }
@@ -52,8 +52,38 @@ resource "google_compute_route" "route_vpc_to_internet" {
   dest_range       = "0.0.0.0/0"
   next_hop_gateway = "default-internet-gateway"
 
-  tags = ["${local.default_tags}", "route"]
+  priority = 999
+  
+  # the tags that this route applies to
+  tags = ["node"]
 }
+
+# resource "google_compute_route" "route_back_kubespray_services" {
+#   name        = "${local.pre}-route-vpc-to-internet"
+#   description = "${local.pre}-route-vpc-to-internet"
+
+#   network          = "${google_compute_network.vpc.self_link}"
+#   dest_range       = "10.233.0.0/18"
+#   next_hop_instance =
+#   priority = 999
+
+#   # the tags that this route applies to
+#   tags = ["node"]
+# }
+
+# resource "google_compute_route" "route_back_kubespray_pods" {
+#   name        = "${local.pre}-route-vpc-to-internet"
+#   description = "${local.pre}-route-vpc-to-internet"
+
+#   network          = "${google_compute_network.vpc.self_link}"
+#   dest_range       = "10.233.64.0/18"
+#   next_hop_gateway = 
+
+#   priority = 999
+
+#   # the tags that this route applies to
+#   tags = ["node"]
+# }
 
 # =================================================================================
 # ========================   output   =============================================

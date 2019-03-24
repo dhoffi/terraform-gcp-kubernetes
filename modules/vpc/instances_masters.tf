@@ -26,10 +26,20 @@ resource "google_compute_instance_template" "masters-template" {
   network_interface {
     subnetwork = "${google_compute_subnetwork.private-subnet.self_link}"
 
+    # alias_ip_range {
+    #   subnetwork_range_name = "${local.pre}-masters-alias-ip-range-kube-service-addresses"
+    #   ip_cidr_range = "10.233.0.0/18"
+    # }
+    # alias_ip_range {
+    #   subnetwork_range_name = "${local.pre}-masters-alias-ip-range-kube-pods-subnet"
+    #   ip_cidr_range = "10.233.64.0/18"
+    # }
+
     # if ommited --> no public ip
     # access_config = {
     #   # if empty, gets a public ephemeral ip
     # }
+
   }
 
   lifecycle {
@@ -47,6 +57,7 @@ resource "google_compute_instance_template" "masters-template" {
 
   tags = ["node", "master", "${local.default_tags}"]
 }
+
 resource "google_compute_region_instance_group_manager" "masters-group-manager" {
   name        = "${local.pre}-masters-group-manager"
   description = "${local.pre}-masters-group-manager"

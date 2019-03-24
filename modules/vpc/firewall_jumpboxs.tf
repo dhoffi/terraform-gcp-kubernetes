@@ -8,12 +8,13 @@ resource "google_compute_firewall" "jumpboxs-firewall" {
     # enable_logging = true
 
     protocol = "tcp"
-
+  
     ports = [
-      "22",   # ssh
-      "80",   # http
-      "443",  # https
-      "8080", # http-proxy
+      "1-65535"
+      # "22",   # ssh
+      # "80",   # http
+      # "443",  # https
+      # "8080", # http-proxy
     ]
   }
 

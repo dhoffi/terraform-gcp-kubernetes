@@ -1,11 +1,13 @@
 # Terraforming Infrastructure for setting up Kubernetes with kubespray
 
+github repo of this: https://github.com/dhoffi/terraform-gcp-kubernetes
+
 vaguely based upon: https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform</br>
 vaguely based upon: https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws
 
 This project is highly parameterized to be able to terraform for different GCP accounts, and environments within them.
 
-By sourcing `.envrc` there will be defined several environment variables, which also will be used inside scripts and terraforming.
+By `source .envrc` there will be defined several environment variables, which also will be used inside scripts and terraforming. Helper functions and definitions inside `source bash_aliases`.
 
 Environment Variable `DEST` determines the target GCP account which to use.</br>
 (This way e.g.: terraformed 'test' and 'dev' environments can be setup in a different GCP account than 'prod')
@@ -35,8 +37,15 @@ Naming scheme of **any resource** created should be prefixed with '${DEST}-{env}
     - [terraform workspace](#terraform-workspace)
     - [jumphost / jumpbox / bastion host](#jumphost--jumpbox--bastion-host)
     - [first time setup of `~/.ssh/known_hosts` and `~/.ssh/config`](#first-time-setup-of-sshknownhosts-and-sshconfig)
+    - [ssh tunnel (local port forward) from your local laptop to a master k8s api](#ssh-tunnel-local-port-forward-from-your-local-laptop-to-a-master-k8s-api)
+    - [destroy and recreate everything (twdestroy twapply) again](#destroy-and-recreate-everything-twdestroy-twapply-again)
   - [Terraforming GCP for kubespray](#terraforming-gcp-for-kubespray)
     - [terraform apply](#terraform-apply)
+  - [Kubespray](#kubespray)
+    - [edits compared to kubespray's ./inventory/sample/... configuration](#edits-compared-to-kubesprays-inventorysample-configuration)
+    - [running ansible](#running-ansible)
+    - [testing your cluster](#testing-your-cluster)
+    - [kubernetes Dashboard](#kubernetes-dashboard)
 
 ---
 
@@ -300,6 +309,12 @@ The first time you login to any machine, ssh will verify/check the host fingerpr
 
 You have to do this once by logging into the jumpbox.
 
+You can get the names and IPs of all instances by
+
+```
+gcloud compute instances list
+```
+
 ```
 ssh -i $TF_VAR_JUMPBOXSSHFILE $TF_VAR_JUMPBOXUSER@<jumpboxIp>
 ```
@@ -310,20 +325,44 @@ But this would be very inconvenient to do if you have a cluster of a few hundred
 - your local computers `~/.ssh/known_hosts`
 - the jumpboxs `~/.ssh/known_hosts`
 
+Remember that if doing this again, you have to delete older (destroyed) instances lines from your `~/.ssh/known_hosts` file.
+
 For convenience you can setup your local computers `~/.ssh/config` file like this:
 
 ```
+Host master1
+  Hostname     10.0.1.2
+  User         devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  ProxyJump    devtest-jumpbox
+
+Host master2
+  Hostname     10.0.1.3
+  User         devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  ProxyJump    devtest-jumpbox
+
 # private network with master and worker nodes
 Host 10.0.1.*
-  # ProxyCommand ssh -W %h:%p 35.205.119.175
-  ProxyJump devtest-jumpbox
-  User devtest-jbadmin
+  User         devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  ProxyJump    devtest-jumpbox
 
-Host devtest-jumpbox
-  Hostname 35.205.119.175
-  User devtest-jbadmin
+Host devtest-jumpbox 104.199.18.149
+  Hostname     104.199.18.149
+  User         devtest-jbadmin
   IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  # ControlMaster auto
+  # ControlPath ~/.ssh/ansible-%r@%h:%p
+  # ControlPersist 5m
+
+# on local laptop use: ssh -nNT k8stunnel
+Host k8stunnel
+  Hostname     10.0.1.3
+  User         devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  ProxyJump    devtest-jumpbox
+  LocalForward 6443 localhost:6443
 ```
 
 In above example the jumpbox and the nodes share the same user and private ssh key (but you are welcome to give nodes and jumpbox different ssh keys, or even give masters and workers different ssh keys).
@@ -349,6 +388,68 @@ As e.g. ansible just uses plain ssh connections this should enable you to run yo
 ssh_args = -F ./ssh.cfg -o ControlMaster=auto -o ControlPersist=5m
 control_path = ~/.ssh/ansible-%%r@%%h:%%p
 ```
+
+### ssh tunnel (local port forward) from your local laptop to a master k8s api
+
+With above `~/.ssh/config` you can setup a ssh tunnel and do a local port forward THROUGH THE JUMPBOX to the k8s API port on a master:
+
+```
+# on local laptop use: ssh -nNT k8stunnel
+Host k8stunnel
+  Hostname     10.0.1.3
+  User         devtest-jbadmin
+  IdentityFile ~/.ssh/gcp-devtest-jumpbox
+  ProxyJump    devtest-jumpbox
+  LocalForward 6443 localhost:6443
+```
+
+by just doing executing (preferably in an additional terminal window)
+
+```
+ssh -nNT k8stunnel
+```
+
+Options are just there to not open a shell, but bringing the tunnel process in the background. (see man ssh for more infos on these)
+
+After the tunnel is established, you can reach master's api via localhost forwareded port, e.g.:
+
+```
+curl -k https://localhost:6443/api
+```
+
+If you want to run `kubectl` on your local laptop you have to change the server address in `./inventory/cluster-hoffi1/artifacts/admin.conf` to `localhost`
+
+```yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://localhost:6443
+```
+
+and 
+
+```
+cp ./inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/conf
+```
+
+### destroy and recreate everything (twdestroy twapply) again
+
+1) twdestroy
+2) remove all instances entries in any `.ssh/known_hosts` files
+3) twapply
+4) use `./00_setup/updateJumphostIp.sh <newJumpboxIp>` to update jumphost ip in necessary files</br>
+   (also has a `-f <oldIp>` to not determine oldIp from .envrc but taking the given one)
+5) forces you to `direnv allow` or `source .envrc` again
+6) ssh jumpbox and exit again
+7) use `./00_setup/generate_known_hosts.sh` for generating of what you need for `.ssh/known_hosts` file
+8) check that the newly created instances (masters/workers) have same IPs than before</br>
+   otherwise replace them with the new ones in your clusters ansible inventory `hosts.ini`
+9) if not managed by `~/.ssh/config`, restart your `k8stunnel` or `sshuttle --dns -r devtest-jumpbox 10.0.1.0/24 10.233.0.0/16`
+10) `./runAnsible.sh`
+11) `cp inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/config`
+12) check with e.g. `kubectl get svc -n kube-system -o wide` or `kubectl get pod -o wide -n kube-system`</br>
+    you also can check on dedicated pods by their name, e.g. `kubectl describe pod -n kube-system kubernetes-dashboard-8457c55f89-wjkj4`
+
 
 ---
 
@@ -386,6 +487,60 @@ twplan
 twapply
 twdestroy
 ```
+
+## Kubespray
+
+### edits compared to kubespray's ./inventory/sample/... configuration
+
+docker overlay2 as recommended for ubuntu 16.04
+
+```
+cloud_provider: gce
+docker_storage_options: -s overlay2
+
+kubeconfig_localhost: true
+kubectl_localhost: false
+
+kube_network_plugin: cloud
+```
+
+### running ansible
+
+
+### testing your cluster
+
+```
+ssh master1
+sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get pods --all-namespaces
+```
+
+or on your local laptop:
+
+```
+kubectl --kubeconfig inventory/cluster-hoffi1/artifacts/admin.conf get pods --all-namespaces
+```
+
+### kubernetes Dashboard
+
+You can chet the internal kube-system:
+
+```
+kubectl --kubeconfig inventory/cluster-hoffi1/artifacts/admin.conf get svc -n kube-system
+```
+
+If the variable dashboard_enabled is set (default is true), then you can access the Kubernetes Dashboard at the following URL, You will be prompted for credentials: https://first_master:6443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+
+Or you can run 'kubectl proxy' from your local machine to access dashboard in your browser from: http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+
+It is recommended to access dashboard from behind a gateway (like Ingress Controller) that enforces an authentication token. Details and other access options here: https://github.com/kubernetes/dashboard/wiki/Accessing-Dashboard---1.7.X-and-above
+
+To get the access token for login:
+
+```
+kubectl -n kube-system get secret
+kubectl -n kube-system describe secret deployment-controller-token-<changethis>
+```
+
 
 ***more still to be written...***
 

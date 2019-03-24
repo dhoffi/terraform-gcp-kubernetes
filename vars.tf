@@ -5,6 +5,10 @@ variable "JUMPBOXUSER" {}
 variable "JUMPBOXSSHFILENAME" {}
 variable "JUMPBOXSSHFILE" {}
 variable "JUMPBOXSSHPUB" {}
+
+variable CLUSTER_PREFIX {}
+variable CLUSTER_NAME {}
+
 variable "NODEUSER" {}
 variable "NODESSHFILENAME" {}
 variable "NODESSHFILE" {}
@@ -22,11 +26,7 @@ variable "TF_STATE_BUCKET" {}
 
 # VPC variables
 variable how_many_jumpboxs {}
-
-variable cluster_name {}
-
 variable how_many_master_nodes {}
-
 variable how_many_worker_nodes {}
 
 variable "mgmt_subnet_cidr" {}

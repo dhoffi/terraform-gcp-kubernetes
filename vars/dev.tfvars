@@ -3,7 +3,6 @@ dest = "devtest"
 env  = "dev"
 
 how_many_jumpboxs = 1
-cluster_name = "cluster-hoffi1"
 how_many_master_nodes = 2
 how_many_worker_nodes = 2
 

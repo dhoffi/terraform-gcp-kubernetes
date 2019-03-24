@@ -23,6 +23,15 @@ resource "google_compute_subnetwork" "private-subnet" {
   description = "${local.pre}-pri-net"
 
   ip_cidr_range = "${var.private_subnet_cidr}"
+  # secondary_ip_range {
+  #   range_name = "kube-service-addresses"
+  #   ip_cidr_range = "10.233.0.0/18"
+  # }
+  # secondary_ip_range {
+  #   range_name = "kube-pods-subnet"
+  #   ip_cidr_range = "10.233.64.0/18"
+  # }
+
   network       = "${google_compute_network.vpc.self_link}"
 
   private_ip_google_access = false
