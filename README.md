@@ -46,6 +46,7 @@ Naming scheme of **any resource** created should be prefixed with '${DEST}-{env}
     - [running ansible](#running-ansible)
     - [testing your cluster](#testing-your-cluster)
     - [kubernetes Dashboard](#kubernetes-dashboard)
+      - [create an admin-user service-account with ClustRoler](#create-an-admin-user-service-account-with-clustroler)
 
 ---
 
@@ -437,17 +438,18 @@ cp ./inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/conf
 1) twdestroy
 2) remove all instances entries in any `.ssh/known_hosts` files
 3) twapply
-4) use `./00_setup/updateJumphostIp.sh <newJumpboxIp>` to update jumphost ip in necessary files</br>
+4) determine IPs of generated instances, e.g. with `gcloud compute instances list`
+5) use `./00_setup/updateJumphostIp.sh <newJumpboxIp>` to update jumphost ip in necessary files</br>
    (also has a `-f <oldIp>` to not determine oldIp from .envrc but taking the given one)
-5) forces you to `direnv allow` or `source .envrc` again
-6) ssh jumpbox and exit again
-7) use `./00_setup/generate_known_hosts.sh` for generating of what you need for `.ssh/known_hosts` file
-8) check that the newly created instances (masters/workers) have same IPs than before</br>
+6) forces you to `direnv allow` or `source .envrc` again
+7) ssh jumpbox and exit again (for getting jumphost into your local known_hosts file)
+8) use `./00_setup/generate_known_hosts.sh` for generating of what you need for `.ssh/known_hosts` file
+9) check that the newly created instances (masters/workers) have same IPs than before</br>
    otherwise replace them with the new ones in your clusters ansible inventory `hosts.ini`
-9) if not managed by `~/.ssh/config`, restart your `k8stunnel` or `sshuttle --dns -r devtest-jumpbox 10.0.1.0/24 10.233.0.0/16`
-10) `./runAnsible.sh`
-11) `cp inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/config`
-12) check with e.g. `kubectl get svc -n kube-system -o wide` or `kubectl get pod -o wide -n kube-system`</br>
+10) if not managed by `~/.ssh/config`, restart your `k8stunnel` or `sshuttle --dns -r devtest-jumpbox 10.0.1.0/24 10.233.0.0/16`
+11) `./runAnsible.sh`
+12) `cp inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/config`
+13) check with e.g. `kubectl get svc -n kube-system -o wide` or `kubectl get pod -o wide -n kube-system`</br>
     you also can check on dedicated pods by their name, e.g. `kubectl describe pod -n kube-system kubernetes-dashboard-8457c55f89-wjkj4`
 
 
@@ -496,12 +498,13 @@ docker overlay2 as recommended for ubuntu 16.04
 
 ```
 cloud_provider: gce
-docker_storage_options: -s overlay2
+#docker_storage_options: -s overlay2
 
 kubeconfig_localhost: true
 kubectl_localhost: false
 
-kube_network_plugin: cloud
+kube_network_plugin: calico # if you run into problems (e.g. accessing dashboard) use 'weave' instead
+kube_proxy_mode: iptables
 ```
 
 ### running ansible
@@ -522,7 +525,7 @@ kubectl --kubeconfig inventory/cluster-hoffi1/artifacts/admin.conf get pods --al
 
 ### kubernetes Dashboard
 
-You can chet the internal kube-system:
+You can check the internal kube-system:
 
 ```
 kubectl --kubeconfig inventory/cluster-hoffi1/artifacts/admin.conf get svc -n kube-system
@@ -539,6 +542,53 @@ To get the access token for login:
 ```
 kubectl -n kube-system get secret
 kubectl -n kube-system describe secret deployment-controller-token-<changethis>
+```
+
+or single lined:
+
+```
+kubectl -n kube-system describe secret \
+$(kubectl -n kube-system get secret | sed -n -E -e 's/^(deployment-controller-token-[a-z0-9]*).*/\1/p') \
+| sed -n -E -e 's/^token:[ ]*(.*)/\1/p'
+```
+
+#### create an admin-user service-account with ClustRoler
+
+dashboard-adminuser.yml
+
+```yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kube-system
+```
+
+```
+kubectl apply -f ./dashboard-adminuser.yml
+```
+
+To get the access token of this admin-user service-account
+
+```
+kubectl -n kube-system describe secret \
+$(kubectl -n kube-system get secret | sed -n -E -e 's/^(admin-user-token-[a-z0-9]*).*/\1/p') \
+| sed -n -E -e 's/^token:[ ]*(.*)/\1/p'
 ```
 
 
