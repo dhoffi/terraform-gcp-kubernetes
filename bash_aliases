@@ -10,6 +10,7 @@ alias twl='terraform workspace list'
 #alias tw="terraform workspace list | sed -n -E 's/^\* (.*)$/\1/p'"
 function tw() {
   cat $DIR/.terraform/environment
+  # if $- contains 'i' then it's an interactive shell 
   if [[ $- == *i* ]]; then echo; fi
 }
 alias tws="terraform workspace select"

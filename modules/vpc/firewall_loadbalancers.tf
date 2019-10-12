@@ -38,7 +38,7 @@ resource "google_compute_firewall" "lb-internal-basics-firewall" {
 
     # if changing, also check matching forwarding_rule ports!
     ports = [
-      "1-65535",
+      "1-65535", # TODO REWIND
       "22",   # ssh
       "80",   # http
       "443",  # https

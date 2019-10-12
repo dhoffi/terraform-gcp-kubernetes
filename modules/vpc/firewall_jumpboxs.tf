@@ -10,7 +10,7 @@ resource "google_compute_firewall" "jumpboxs-firewall" {
     protocol = "tcp"
   
     ports = [
-      "1-65535"
+      "1-65535" # TODO REWIND
       # "22",   # ssh
       # "80",   # http
       # "443",  # https
