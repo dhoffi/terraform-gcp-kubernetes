@@ -16,12 +16,12 @@ resource "google_compute_forwarding_rule" "lb-internal-masters-forwarding-rule" 
   # all_ports = true
 
   # # for EXTERNAL lb target is used
-  # target                = "${google_compute_target_pool.masters-target-pool.self_link}"
+  # target                = google_compute_target_pool.masters-target-pool.self_link
   # for INTERNAL lb backend_service is used
-  backend_service = "${google_compute_region_backend_service.masters-backend-service.self_link}"
+  backend_service = google_compute_region_backend_service.masters-backend-service.self_link
   load_balancing_scheme = "INTERNAL"
   # only for INTERNAL lbs
-  subnetwork = "${google_compute_subnetwork.private-subnet.self_link}"
+  subnetwork = google_compute_subnetwork.private-subnet.self_link
 
   # port_range            = "64430-64439", # Kkubernetes API server
 }
@@ -31,7 +31,7 @@ resource "google_compute_firewall" "lb-internal-basics-firewall" {
   name        = "${local.pre}-lb-internal-basics-firewall"
   description = "${local.pre}-lb-internal-basics-firewall"
 
-  network = "${google_compute_network.vpc.self_link}"
+  network = google_compute_network.vpc.self_link
 
   allow {
     protocol = "tcp"
@@ -58,7 +58,7 @@ resource "google_compute_firewall" "lb-internal-masters-firewall" {
   name        = "${local.pre}-lb-internal-masters-firewall"
   description = "${local.pre}-lb-internal-masters-firewall"
 
-  network = "${google_compute_network.vpc.self_link}"
+  network = google_compute_network.vpc.self_link
 
   allow {
     protocol = "tcp"
@@ -83,7 +83,7 @@ resource "google_compute_firewall" "lb-internal-workers-firewall" {
   name        = "${local.pre}-lb-internal-workers-firewall"
   description = "${local.pre}-lb-internal-workers-firewall"
 
-  network = "${google_compute_network.vpc.self_link}"
+  network = google_compute_network.vpc.self_link
 
   allow {
     protocol = "tcp"

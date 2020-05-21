@@ -6,5 +6,4 @@ trap "set +x" INT TERM QUIT EXIT
 set -x
 terraform init -backend=true -input=false \
   -backend-config "credentials=${TF_VAR_GCP_PROJECT_SERVICE_ACCOUNT_FILE}" \
-  -backend-config "bucket=${TF_VAR_TF_STATE_BUCKET}" \
-  -backend-config "project=${TF_VAR_PROJECT_ID}"
+  -backend-config "bucket=${TF_VAR_TF_STATE_BUCKET}"

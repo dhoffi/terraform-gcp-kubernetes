@@ -6,3 +6,4 @@
 /tmp/
 
 *.retry
+*.creds

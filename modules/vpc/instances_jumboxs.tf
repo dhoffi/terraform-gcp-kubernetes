@@ -13,7 +13,7 @@ resource "google_compute_instance_template" "jumpboxs-template" {
   can_ip_forward = true
 
   disk {
-    source_image = "${data.google_compute_image.jumpbox-image_data.self_link}"
+    source_image = data.google_compute_image.jumpbox-image_data.self_link
     boot         = true
     auto_delete  = true
   }
@@ -24,10 +24,10 @@ resource "google_compute_instance_template" "jumpboxs-template" {
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.mgmt-subnet.self_link}"
+    subnetwork = google_compute_subnetwork.mgmt-subnet.self_link
 
     # if omited --> no public ip
-    access_config = {
+    access_config {
       # if empty, gets a public ephemeral ip
     }
   }
@@ -41,11 +41,9 @@ resource "google_compute_instance_template" "jumpboxs-template" {
       "sshKeys", "${var.jumpboxuser}:${var.jumpboxsshpub}",
     ))}"
 
-  labels = "${merge(local.default_labels, map(
-      "jumpbox", "true",
-    ))}"
+  labels = merge(local.default_labels, { jumpbox = "true" })
 
-  tags = ["jumpbox", "${local.default_tags}"]
+  tags = flatten(["jumpbox", local.default_tags])
 }
 
 resource "google_compute_region_instance_group_manager" "jumpboxs-group-manager" {
@@ -53,21 +51,21 @@ resource "google_compute_region_instance_group_manager" "jumpboxs-group-manager"
   description = "${local.pre}-jumpboxs-group-manager"
 
   base_instance_name = "${local.pre}-jumpbox"
-  instance_template  = "${google_compute_instance_template.jumpboxs-template.self_link}"
-  region             = "${var.gcp_region}"
+  instance_template  = google_compute_instance_template.jumpboxs-template.self_link
+  region             = var.gcp_region
 
   wait_for_instances = false
 
   # unless this resource is attached to an autoscaler, in which case it should never be set
-  target_size = "${var.how_many_jumpboxs}"
+  target_size = var.how_many_jumpboxs
 
   # only for EXTERNAL lbs
-  target_pools = ["${google_compute_target_pool.jumpboxs-target-pool.self_link}"]
+  target_pools = [google_compute_target_pool.jumpboxs-target-pool.self_link]
 
   #distribution_policy_zones  = ["europe-west1-b", "europe-west1-c"]
 
   # auto_healing_policies {
-  #   health_check      = "${google_compute_health_check.jumpboxs-health-check.self_link}"
+  #   health_check      = google_compute_health_check.jumpboxs-health-check.self_link
   #   initial_delay_sec = 60
   # }
 }
@@ -80,8 +78,8 @@ resource "google_compute_target_pool" "jumpboxs-target-pool" {
   session_affinity = "CLIENT_IP"
 
   # health_checks = [
-  #   # "${google_compute_http_health_check.jumpboxs-health-check.self_link}",
-  #   "${google_compute_health_check.jumpboxs-health-check.self_link}",
+  #   # google_compute_http_health_check.jumpboxs-health-check.self_link,
+  #   google_compute_health_check.jumpboxs-health-check.self_link,
   # ]
 }
 
@@ -89,7 +87,7 @@ resource "google_compute_target_pool" "jumpboxs-target-pool" {
 # ========================    data    =============================================
 # =================================================================================
 data "google_compute_region_instance_group" "jumpboxs-group_data" {
-  self_link = "${google_compute_region_instance_group_manager.jumpboxs-group-manager.instance_group}"
+  self_link = google_compute_region_instance_group_manager.jumpboxs-group-manager.instance_group
 }
 
 # =================================================================================

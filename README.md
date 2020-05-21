@@ -435,21 +435,21 @@ cp ./inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/conf
 
 ### destroy and recreate everything (twdestroy twapply) again
 
-1) twdestroy
-2) remove all instances entries in any `.ssh/known_hosts` files
-3) twapply
-4) determine IPs of generated instances, e.g. with `gcloud compute instances list`
-5) use `./00_setup/updateJumphostIp.sh <newJumpboxIp>` to update jumphost ip in necessary files</br>
+1. twdestroy
+2. remove all instances entries in any `.ssh/known_hosts` files
+3. twapply
+4. determine IPs of generated instances, e.g. with `gcloud compute instances list`
+5. use `./00_setup/updateJumphostIp.sh <newJumpboxIp>` to update jumphost ip in necessary files</br>
    (also has a `-f <oldIp>` to not determine oldIp from .envrc but taking the given one)
-6) forces you to `direnv allow` or `source .envrc` again
-7) ssh jumpbox and exit again (for getting jumphost into your local known_hosts file)
-8) use `./00_setup/generate_known_hosts.sh` for generating of what you need for `.ssh/known_hosts` file
-9) check that the newly created instances (masters/workers) have same IPs than before</br>
+6. forces you to `direnv allow` or `source .envrc` again
+7. `ssh <env>-jumpbox` and exit again (for getting jumphost into your local known_hosts file)
+8. use `./00_setup/generate_known_hosts.sh` for generating of what you need for `.ssh/known_hosts` file
+9. check that the newly created instances (masters/workers) have same IPs than before</br>
    otherwise replace them with the new ones in your clusters ansible inventory `hosts.ini`
-10) if not managed by `~/.ssh/config`, restart your `k8stunnel` or `sshuttle --dns -r devtest-jumpbox 10.0.1.0/24 10.233.0.0/16`
-11) `./runAnsible.sh`
-12) `cp inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/config`
-13) check with e.g. `kubectl get svc -n kube-system -o wide` or `kubectl get pod -o wide -n kube-system`</br>
+10. if not managed by `~/.ssh/config`, restart your `k8stunnel` or `sshuttle --dns -r devtest-jumpbox 10.0.1.0/24 10.233.0.0/16`
+11. `./runAnsible.sh`
+12. `cp inventory/cluster-hoffi1/artifacts/admin.conf ~/.kube/config`
+13. check with e.g. `kubectl get svc -n kube-system -o wide` or `kubectl get pod -o wide -n kube-system`</br>
     you also can check on dedicated pods by their name, e.g. `kubectl describe pod -n kube-system kubernetes-dashboard-8457c55f89-wjkj4`
 
 

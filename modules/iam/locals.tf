@@ -4,8 +4,9 @@ locals {
 
   # add tags like this: tags = "${merge(var.default_tags, map("tagname", "tagvalue"))}"
   default_labels = {
-    dest = "${var.dest}"
-    env  = "${var.env}"
+    dest = var.dest
+    env  = var.env
   }
-  default_tags = ["${var.dest}", "${var.env}"]
+  
+  default_tags = [var.dest, var.env]
 }

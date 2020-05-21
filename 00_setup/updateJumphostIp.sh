@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ -z "$REPO_ROOT_DIR" ]; then echo 'you have to `source .envrc` in project root dir or consider installing https://direnv.net' ; exit -1 ; fi
+if [ -z "$REPO_ROOT_DIR" ]; then echo 'you have to `source .envrc` in project root dir or consider installing https://direnv.net' ; exit 255 ; fi
 trap "set +x" INT TERM QUIT EXIT
 
-function usage() { echo "usage: $0 [-f <oldIp>] <newIp>"; exit -1 ; }
+function usage() { echo "usage: $0 [-f <oldIp>] <newIp>"; exit 255 ; }
 
 ipPattern='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
 forceOldIP="false"
@@ -15,24 +15,32 @@ if [ "$1" = "-f" ]; then
 fi
 newIP="$1"
 
-if [ -z "$newIP" ]; then usage ; fi
+if [ -z "$newIP" ]; then
+  echo "determining new jumphost ip ..."
+  newIP=$(gcloud compute instances list --format=json | jq -r --arg DEST $DEST --arg WORKSPACE $(cat $REPO_ROOT_DIR/.terraform/environment) '.[] | select((.labels.jumpbox == "true") and (.labels.dest == $DEST) and (.labels.env == $WORKSPACE)) | .networkInterfaces[].accessConfigs[0].natIP')
+  if [ -z "$newIP" ]; then
+    echo "could not determine new jumphost IP from 'gcloug compute instances list'"
+    usage
+    exit 255
+  fi
+fi
 if [ ! -z "$(echo $newIP | sed -E s/$ipPattern//)" ]; then
   echo "given: '$newIP' is not a valid IP"
-  exit -1
+  exit 255
 fi
 
 if [ "$forceOldIP" = "false" ]; then
   prefix="export TF_VAR_JUMPBOXIP=['\"]?"
   postfix="['\"]?"
   oldIP=$(sed -n -E -e "s/^$prefix($ipPattern)$postfix/\1/p" $REPO_ROOT_DIR/.envrc)
-  if [ -z "$oldIP" ]; then echo "failed to determine oldIP from .envrc"; exit -1; 
+  if [ -z "$oldIP" ]; then echo "failed to determine oldIP from .envrc"; exit 255 ; 
   else echo "$oldIP ==> $newIP determined from .envrc"
   fi
 fi
 
 if [ "$oldIP" = "$newIP" ]; then
     echo "given IP $newIP and $oldIP oldIP are already the same. exiting."
-    exit -1
+    exit 255
 fi
 
 insideRepoFiles=($REPO_ROOT_DIR/.envrc $REPO_ROOT_DIR/provision/ssh.cfg $REPO_ROOT_DIR/00_setup/generate_known_hosts.sh)
@@ -51,7 +59,7 @@ case "${answer}" in
         echo 'ok, proceeding...' ;;
     *)
         echo 'ok, exiting...'
-        exit -1
+        exit 255
 esac
 
 oldIPpattern=${oldIP//./\\.} # escape IP dots

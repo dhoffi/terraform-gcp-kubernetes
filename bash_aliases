@@ -58,6 +58,7 @@ function twapply() {
 }
 echo "  -> use 'twdestroy' instead of 'terraform destroy'"
 function twdestroy() {
+  echo "consider to remove ~/.ssh/known_hosts first with ./00_setup/remove_known_hosts.sh"
   ws=$(tw)
   set -x
   time terraform destroy -var-file ./vars/${ws}.tfvars

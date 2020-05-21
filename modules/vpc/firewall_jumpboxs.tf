@@ -2,7 +2,7 @@ resource "google_compute_firewall" "jumpboxs-firewall" {
   name        = "${local.pre}-jumpboxs-firewall"
   description = "${local.pre}-jumpboxs-firewall"
 
-  network = "${google_compute_network.vpc.self_link}"
+  network = google_compute_network.vpc.self_link
 
   allow {
     # enable_logging = true
